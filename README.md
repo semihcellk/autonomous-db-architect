@@ -1,5 +1,7 @@
 # 🏛️ Autonomous DB-Architect
 
+> **Academics Note:** *This project was developed as the first project for the **YZV 445E - Artificial Intelligence Project** course at **Istanbul Technical University (ITU)**.*
+
 An autonomous multi-agent AI pipeline that directly translates natural language requirements into production-ready SQLite database schemas and visualizations.
 
 ![Workflow Architecture](assets/workflow-graph.svg)
