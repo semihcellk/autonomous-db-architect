@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB-Architect — AI Database Designer</title>
+    <meta name="description" content="Autonomous multi-agent AI pipeline that translates natural language into production-ready SQLite schemas and ER diagrams.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- ═══ Background Ambient Glow ═══ -->
+    <div class="bg-glow bg-glow--1"></div>
+    <div class="bg-glow bg-glow--2"></div>
+
+    <!-- ═══ Header ═══ -->
+    <header id="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🏛️</span>
+                <h1>DB-Architect</h1>
+            </div>
+            <p class="tagline">Describe your database in plain English — AI agents will design it for you.</p>
+        </div>
+    </header>
+
+    <!-- ═══ Main Container ═══ -->
+    <main id="app-main">
+
+        <!-- ── Input Section ── -->
+        <section id="input-section" class="glass-card">
+            <div class="input-header">
+                <h2>Define Your Database</h2>
+                <button id="example-btn" class="btn-ghost" type="button">Try an example</button>
+            </div>
+            <textarea
+                id="prompt-input"
+                placeholder="e.g. I need a database for an e-commerce platform with users, products, orders, payments, and reviews..."
+                rows="4"
+            ></textarea>
+            <div class="input-actions">
+                <button id="run-btn" class="btn-primary" type="button">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-label">Generate Schema</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ── Pipeline Progress ── -->
+        <section id="pipeline-section" class="glass-card hidden">
+            <h2>Agent Pipeline</h2>
+            <div id="pipeline-steps" class="pipeline-steps">
+                <div class="step" data-stage="analyst">
+                    <div class="step-indicator"><span class="step-dot"></span></div>
+                    <div class="step-body">
+                        <h3>📋 Requirements Analyst</h3>
+                        <p class="step-desc">Parsing your description into structured entities…</p>
+                        <pre class="step-output hidden"></pre>
+                    </div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-stage="sql_developer">
+                    <div class="step-indicator"><span class="step-dot"></span></div>
+                    <div class="step-body">
+                        <h3>💾 SQL Developer</h3>
+                        <p class="step-desc">Generating SQLite DDL code…</p>
+                        <pre class="step-output hidden"></pre>
+                    </div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-stage="reflection">
+                    <div class="step-indicator"><span class="step-dot"></span></div>
+                    <div class="step-body">
+                        <h3>🔄 Reflection Loop</h3>
+                        <p class="step-desc">Validating SQL against SQLite runtime…</p>
+                        <div id="reflection-log" class="reflection-log"></div>
+                    </div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-stage="d2_designer">
+                    <div class="step-indicator"><span class="step-dot"></span></div>
+                    <div class="step-body">
+                        <h3>🎨 D2 Designer</h3>
+                        <p class="step-desc">Creating ER diagram visualization…</p>
+                        <pre class="step-output hidden"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Results Section ── -->
+        <section id="results-section" class="hidden">
+            <div class="results-grid">
+                <!-- SQL Output -->
+                <div id="sql-result" class="glass-card result-card">
+                    <div class="result-header">
+                        <h2>💾 SQL Schema</h2>
+                        <button class="btn-ghost btn-copy" data-target="sql-code" type="button">Copy</button>
+                    </div>
+                    <pre id="sql-code" class="code-block"></pre>
+                </div>
+
+                <!-- D2 / SVG Output -->
+                <div id="diagram-result" class="glass-card result-card">
+                    <div class="result-header">
+                        <h2>🎨 ER Diagram</h2>
+                        <div class="tab-bar">
+                            <button class="tab active" data-tab="svg-view" type="button">Diagram</button>
+                            <button class="tab" data-tab="d2-view" type="button">D2 Code</button>
+                        </div>
+                    </div>
+                    <div id="svg-view" class="tab-content active">
+                        <div id="svg-container" class="svg-container"></div>
+                    </div>
+                    <div id="d2-view" class="tab-content">
+                        <pre id="d2-code" class="code-block"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══ Footer ═══ -->
+    <footer id="app-footer">
+        <p>Built with <span class="heart">♥</span> by multi-agent AI • Powered by LiteLLM + D2lang</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

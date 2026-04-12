@@ -1,3 +1,9 @@
+# ── Project-Specific ─────────────────────────────────────
+output/*.sql
+output/*.d2
+output/*.svg
+.env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -1,120 +1,95 @@
 """
-Autonomous DB-Architect
-Implements: Requirements Analyst -> SQL Developer <-> DBA Critic (Reflection with SQLite) -> D2 Designer
+Autonomous DB-Architect — CLI Entry Point
+Run: python main.py
 """
-import os
-import subprocess
-import sqlite3
-import uuid
-from pathlib import Path
-import litellm
 
-# === API Configuration ===
-# Insert your OpenAI or Gemini API keys here before running securely
-os.environ["OPENAI_API_KEY"] = "YOUR_API_KEY_HERE"
-MODEL = os.environ.get("MODEL", "gpt-4o-mini")
+import sys
+from rich.console import Console
+from rich.panel import Panel
+from rich.markdown import Markdown
 
-MAX_REFLECTION_RETRIES = 5
+console = Console()
 
-def call_llm(agent_name: str, prompt: str) -> str:
-    print(f"[{agent_name}] Generating response...")
-    response = litellm.completion(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response.choices[0].message.content
 
-def strip_fences(code: str) -> str:
-    lines = code.strip().splitlines()
-    if lines and lines[0].startswith("```"):
-        lines = lines[1:]
-    if lines and lines[-1].strip() == "```":
-        lines = lines[:-1]
-    return "\n".join(lines).strip()
+def _cli_callback(event: str, data: dict):
+    """Pretty-print pipeline events to the terminal."""
+    if event == "stage":
+        stage = data.get("stage", "")
+        status = data.get("status", "")
+        labels = {
+            "init":          "🚀  Pipeline",
+            "analyst":       "📋  Requirements Analyst",
+            "sql_developer": "💾  SQL Developer",
+            "reflection":    "🔄  Reflection Loop",
+            "d2_designer":   "🎨  D2 Designer",
+        }
+        label = labels.get(stage, stage)
+        if status == "running":
+            console.print(f"\n[bold cyan]{label}[/] — [dim]running...[/]")
+        elif status == "done":
+            console.print(f"[bold green]{label}[/] — [green]✓ done[/]")
+        elif "run_id" in data:
+            console.print(Panel(
+                f"[bold]Run ID:[/] {data['run_id']}",
+                title="🏛️  Autonomous DB-Architect",
+                border_style="bright_blue",
+            ))
 
-def test_sqlite_ddl(ddl_code: str) -> tuple[bool, str]:
+    elif event == "reflection":
+        icon = "✅" if data["passed"] else "❌"
+        color = "green" if data["passed"] else "red"
+        console.print(f"  {icon} [bold {color}]Iter {data['iteration']}:[/] {data['message']}")
+
+    elif event == "log":
+        agent = data.get("agent", "")
+        status = data.get("status", "")
+        if status == "generating":
+            console.print(f"  [dim]⏳ [{agent}] Generating response...[/]")
+
+    elif event == "error":
+        console.print(f"\n[bold red]ERROR:[/] {data['message']}")
+
+    elif event == "result":
+        console.print()
+        console.print(Panel(
+            f"[green]SQL Schema →[/] {data['sql_path']}\n"
+            f"[green]D2 Diagram →[/] {data.get('d2_path', 'skipped')}\n"
+            f"[green]SVG Output →[/] {data.get('svg_path', 'skipped')}\n"
+            f"[dim]Reflection iterations: {data['reflection_iterations']}[/]",
+            title="✅  Pipeline Complete",
+            border_style="green",
+        ))
+        if data.get("d2_error"):
+            console.print(f"  [yellow]⚠ D2 Warning:[/] {data['d2_error']}")
+
+
+def main():
+    console.print(Panel(
+        Markdown("**Autonomous DB-Architect**\nDescribe the database you need in plain English."),
+        border_style="bright_blue",
+    ))
+
     try:
-        conn = sqlite3.connect(":memory:")
-        cursor = conn.cursor()
-        cursor.executescript(ddl_code)
-        conn.commit()
-        conn.close()
-        return True, "SUCCESS"
-    except Exception as e:
-        return False, str(e)
+        request = console.input("[bold cyan]›[/] ")
+    except (KeyboardInterrupt, EOFError):
+        console.print("\n[dim]Cancelled.[/]")
+        sys.exit(0)
 
-def compile_d2(code: str, file_name: str) -> Path:
-    out_dir = Path(__file__).parent / "output"
-    out_dir.mkdir(exist_ok=True)
-    src = out_dir / f"{file_name}.d2"
-    svg = out_dir / f"{file_name}.svg"
-    src.write_text(code, encoding="utf-8")
-    subprocess.run(["d2", str(src), str(svg)], check=True, capture_output=True)
-    return svg
+    if not request.strip():
+        console.print("[yellow]No input provided. Exiting.[/]")
+        sys.exit(0)
 
-def run(user_request: str) -> str:
-    run_id = uuid.uuid4().hex[:8]
-    print(f"\n[INFO] Starting DB-Architect Run: {run_id}")
-    
-    # 1. Requirements Analyst
-    analyst_prompt = (
-        "You are a Requirements Analyst for databases. Read the user request and extract the entities (tables) "
-        "and their fields. Return ONLY a clean JSON object containing the entities, their fields and relationships. "
-        "No markdown fences.\n\n"
-        f"User Request: {user_request}"
-    )
-    json_entities = strip_fences(call_llm("Requirements Analyst", analyst_prompt))
-    
-    # 2. SQL Developer
-    sql_dev_prompt = (
-        "You are a SQL Developer. Convert the following JSON database entities into strict SQLite DDL code "
-        "Output ONLY the raw SQL code. No markdown fences.\n"
-        "INSTRUCTION: Introduce one syntax error to trigger the Reflection Loop dynamically.\n\n"
-        f"JSON Entities: {json_entities}"
-    )
-    current_sql = strip_fences(call_llm("SQL Developer", sql_dev_prompt))
-    
-    # 3. Reflection Loop (DBA Critic + SQLite Tool)
-    print("\n[INFO] Starting Producer-Critic Reflection Loop...")
-    for iter_count in range(1, MAX_REFLECTION_RETRIES + 1):
-        is_valid, error_msg = test_sqlite_ddl(current_sql)
-        if is_valid:
-            print(f"  -> SQLite Runtime Test PASSED at iteration {iter_count}.")
-            break
-            
-        print(f"  -> SQLite Runtime Test FAILED at iter {iter_count}. Error: '{error_msg}'")
-        
-        if iter_count == MAX_REFLECTION_RETRIES:
-            break
-            
-        dba_prompt = (
-            "You are a Senior DBA. Analyze the error and provide clear feedback to the SQL Developer "
-            "on how to fix it. Do NOT write the corrected SQL yourself.\n\n"
-            f"Error Message: {error_msg}\nCode:\n{current_sql}\n"
-        )
-        dba_feedback = call_llm("DBA Critic", dba_prompt)
-        
-        sql_fix_prompt = (
-            "You are a SQL Developer. Your previous code failed with an error. Apply the Senior DBA's feedback "
-            "to fix it. Output ONLY the complete, corrected raw SQLite DDL code.\n\n"
-            f"SQLite Error: {error_msg}\nDBA Feedback:\n{dba_feedback}\n"
-        )
-        current_sql = strip_fences(call_llm("SQL Developer (Fix)", sql_fix_prompt))
-    
-    # 4. D2 Designer
-    print("\n[INFO] Compiling D2 Architecture Visualization...")
-    designer_prompt = (
-        "You are an expert Diagram Designer using 'd2lang' (d2lang.com). "
-        "Given the following SQLite DDL, generate a complete D2 diagram code with 'direction: right'. "
-        "Return ONLY the D2 code.\n\n"
-        f"SQL DDL:\n{current_sql}"
-    )
-    d2_code = strip_fences(call_llm("D2 Designer", designer_prompt))
-    
-    svg_path = compile_d2(d2_code, f"db_diagram_{run_id}")
-    print(f"\n[OK] Run {run_id} is complete! Diagram saved locally.")
-    return d2_code
+    # Import here so config.py validation runs after .env is loaded
+    from pipeline import run, PipelineError
+
+    try:
+        run(request, callback=_cli_callback)
+    except PipelineError:
+        sys.exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[dim]Interrupted.[/]")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    request = input("Define the target database system:\n> ")
-    run(request)
+    main()
