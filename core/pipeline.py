@@ -11,7 +11,7 @@ All critical bugs have been fixed:
 import uuid
 from pathlib import Path
 
-from config import MAX_REFLECTION_RETRIES, OUTPUT_DIR
+from core.config import MAX_REFLECTION_RETRIES, OUTPUT_DIR
 from agents import analyst, sql_developer, dba_critic, d2_designer
 from tools.sqlite_validator import validate_ddl
 from tools.d2_compiler import compile_d2, D2NotInstalledError, D2CompilationError

@@ -3,7 +3,7 @@ LLM helper utilities shared across all agents.
 """
 
 import litellm
-from config import MODEL
+from core.config import MODEL
 
 
 def call_llm(agent_name: str, prompt: str, *, callback=None) -> str:

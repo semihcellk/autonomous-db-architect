@@ -6,7 +6,7 @@ Writes .d2 source and invokes the `d2` CLI to produce SVG output.
 import shutil
 import subprocess
 from pathlib import Path
-from config import OUTPUT_DIR
+from core.config import OUTPUT_DIR
 
 
 class D2NotInstalledError(Exception):

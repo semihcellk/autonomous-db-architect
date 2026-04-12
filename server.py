@@ -49,7 +49,7 @@ async def run_pipeline(request: Request, prompt: str = ""):
 
     def run_in_thread():
         try:
-            from pipeline import run
+            from core.pipeline import run
             run(prompt, callback=callback)
         except Exception as e:
             event_queue.put({"event": "error", "data": {"message": str(e)}})

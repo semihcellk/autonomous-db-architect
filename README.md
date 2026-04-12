@@ -109,27 +109,29 @@ Opens a browser-based interface at `http://localhost:8000` with:
 
 ```
 autonomous-db-architect/
+├── core/                     # Internal engine
+│   ├── config.py             # Centralized configuration
+│   └── pipeline.py           # Main orchestration pipeline
 ├── agents/                   # AI agent modules
-│   ├── analyst.py            # Requirements Analyst
-│   ├── sql_developer.py      # SQL Developer (generate + fix)
-│   ├── dba_critic.py         # DBA Critic (reflection feedback)
-│   └── d2_designer.py        # D2 Diagram Designer
+│   ├── analyst.py
+│   ├── sql_developer.py
+│   ├── dba_critic.py
+│   └── d2_designer.py
 ├── tools/                    # Utility modules
-│   ├── llm.py                # LLM calling + fence stripping
-│   ├── sqlite_validator.py   # In-memory SQLite DDL validation
-│   └── d2_compiler.py        # D2 CLI compilation wrapper
+│   ├── llm.py
+│   ├── sqlite_validator.py
+│   └── d2_compiler.py
 ├── static/                   # Web UI frontend
 │   ├── index.html
 │   ├── style.css
 │   └── app.js
+├── docs/                     # Documentation
+│   └── example_prompts.md
 ├── assets/                   # Documentation assets
 │   └── workflow-graph.svg
 ├── output/                   # Generated schemas & diagrams
-├── config.py                 # Centralized configuration
-├── pipeline.py               # Main orchestration pipeline
 ├── main.py                   # CLI entry point
 ├── server.py                 # Web UI server (FastAPI)
-├── example_prompts.md        # Ready-to-use example prompts
 ├── requirements.txt
 ├── .env.example
 └── LICENSE

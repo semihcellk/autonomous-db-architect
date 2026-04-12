@@ -79,8 +79,8 @@ def main():
         console.print("[yellow]No input provided. Exiting.[/]")
         sys.exit(0)
 
-    # Import here so config.py validation runs after .env is loaded
-    from pipeline import run, PipelineError
+    # Import here so core.config validation runs after .env is loaded
+    from core.pipeline import run, PipelineError
 
     try:
         run(request, callback=_cli_callback)
